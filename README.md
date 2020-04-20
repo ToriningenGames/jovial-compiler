@@ -1,5 +1,7 @@
 # Freestanding JOVIAL compiler
 
+### Current status: No
+
 ## Why?
 
 As in, why not just use, say, GCC? While other, better, more extensible

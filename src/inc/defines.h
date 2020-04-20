@@ -10,14 +10,10 @@
 
 _Noreturn void error(char *message, ...);
 
-/**********
- * scan.c *
- **********/
-
-extern int line;
-
  /*********
   * lex.c *
   *********/
 
-enum lex_type {LEX_NONE, LEX_CONST, LEX_OP, LEX_IDEN};
+enum lex_type {LEX_NONE, LEX_NUMLIT, LEX_STRLIT, LEX_OP, LEX_IDEN, LEX_SEP};
+extern int line;
+void newInput(char *name);
