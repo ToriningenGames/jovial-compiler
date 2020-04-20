@@ -1,0 +1,5 @@
+# This folder holds the executables
+# So, we obviously don't want to commit them!
+*
+# But, the folder has to exist, or else Windows fails to create the files
+!.gitignore

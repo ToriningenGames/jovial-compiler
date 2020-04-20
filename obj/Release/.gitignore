@@ -1,0 +1,4 @@
+# This folder holds the compiled objects
+# So, we obviously don't want to commit them!
+*
+!.gitignore
