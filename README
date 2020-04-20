@@ -29,3 +29,8 @@ Familiarity. And availability of tools.
 Self-hosting would also be nice, but that would require a pre-existing compiler.
 Failing this, C is an ALGOL-style language, which would make porting it to
 JOVIAL a (hopefully) easy-ish task.
+
+## Requirements
+
+This project requires a C11 compiler to compile.
+Its build system is done with make. Developed on a Windows 10 platform, with GCC
