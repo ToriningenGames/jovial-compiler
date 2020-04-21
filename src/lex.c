@@ -1,20 +1,30 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "inc/defines.h"
+#include "inc/re.h"
 
 
 int line = 0;
 static int lookahead = ' ';
 FILE *input;
-static char buf[32];
-
-struct lex_token {
-        enum lex_type kind;
-        long id;
-};
+static char buf[80];
 
 char *stringTable[1024];
 
+
+int nextChar()
+{
+        int temp = lookahead;
+        do {
+                if (lookahead == '\n') {
+                        line++;
+                };
+                lookahead = getchar();
+        } while (isspace(lookahead));
+        return temp;
+}
 
 void lexInit()
 {
@@ -108,13 +118,13 @@ void lexInit()
         stringTable[86] = "ZONE";
         //Predefined values
         stringTable[87] = NULL;
-        nextchar();
+        nextChar();
 }
 
 void lexEnd()
 {
         //Don't try to free the string constants
-        for (long i = 2; stringTable[i]; i++) {
+        for (long i = 87; stringTable[i]; i++) {
                 free(stringTable[i]);
                 stringTable[i] = NULL;
         }
@@ -130,23 +140,17 @@ int peek()
         return lookahead;
 }
 
-int nextchar()
+_Bool detect(char *any)
 {
-        int temp = lookahead;
-        do {
-                if (lookahead == '\n') {
-                        line++;
-                };
-                lookahead = getchar();
-        } while (isspace(lookahead))
-        return temp;
+        return strchr(any, peek());
 }
 
-void expect(char *any)
+int expect(char *any)
 {
-        if (!strchr(nextchar(), any)) {
-                error("Expected '%c'", n);
+        if (!detect(any)) {
+                error("Expected one of '%s'", any);
         };
+        return nextChar();
 }
 
 struct lex_token getID()
@@ -155,13 +159,23 @@ struct lex_token getID()
         //Section 8.2.1 specifies only 31 characters are significant
         //Names may contain letters, numbers, the $, or the '
         //They must start with a letter or a $
-        buf[0] = '\0';
+        buf[0] = toupper(expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$"));
+        int i = 1;
+        for (i; i < 32; i++) {
+               if (!detect()) {
+                        break;
+               };
+               buf[i] = expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$'0123456789");
+        }
+        //Eat whole identifier
+        while (detect())
+                ;
         if (!isalpha(peek()) && peek() != '$') {
                 return (struct lex_token){0,0};
         };
         long i = 0;
         for (i; isalnum(peek()) || peek() == '$' || peek() == '\''; i++) {
-                buf[i] = nextchar();
+                buf[i] = nextChar();
         }
         buf[i] = '\0';
         //Add token to string table
@@ -176,7 +190,7 @@ struct lex_token getID()
         };
         //Return token data
         struct lex_token out;
-        out.kind = lEX_IDEN;
+        out.kind = LEX_IDEN;
         out.id = i;
         return out;
 }
@@ -191,11 +205,11 @@ struct lex_token getNum()
                 //and that signs are allowed in literal contexts
         buf[0] = '\0';
         if (!isdigit(peek())) {
-                return (struct lex_token){0,0};
+                error("Expected number");
         };
         long i = 0;
         for (i; isalnum(peek()); i++) {
-                buf[i] = nextchar();
+                buf[i] = nextChar();
         }
         buf[i] = '\0';
         //Add token to string table
@@ -210,24 +224,128 @@ struct lex_token getNum()
         };
         //Return token data
         struct lex_token out;
-        out.kind = lEX_IDEN;
+        out.kind = LEX_IDEN;
         out.id = i;
         return out;
 }
 
 struct lex_token getOp()
 {
-        ;
+        //Add check
+        //The valid punctual ops are outlined in Section 8.2.3
+        struct lex_token out;
+        if (!strchr("=@<>*/+-", peek())) {
+                error("Expected punctual operator");
+        };
+        out.kind = LEX_OP;
+        out.id = getchar();
+        if ((out.id == '*' && peek() == '*') ||
+            (out.id == '<' && peek() == '>') ||
+            (out.id == '<' && peek() == '=') ||
+            (out.id == '>' && peek() == '=')) {
+                out.id |= getchar() << 8;
+        };
+        return out;
+}
+
+struct lex_token getSep()
+{
+        //Add check
+        //Separators, like ops, are punctuation (Section 8.2.4)
+        //We are ignoring (* and *) because they are context dependent :<
+        struct lex_token out;
+        if (!strchr("():,;!", peek())) {
+                error("Expected separator");
+        };
+        out.kind = LEX_SEP;
+        out.id = getchar();
+        return out;
+}
+
+struct lex_token getStr()
+{
+        struct lex_token out;
+        switch (nextChar()) {
+        case '\'' :
+                out.kind = LEX_STRLIT;
+                break;
+        case '"' :
+                out.kind = LEX_DBLSTR;
+                break;
+        default :
+                error("Expected quoted string");
+        }
+        int i = 0;
+        for (i; 1; i++) {
+                buf[i] = nextChar();
+                if (out.kind == LEX_STRLIT && buf[i] == '\'') {
+                        if (peek() == '\'') {
+                                nextChar();
+                                continue;
+                        } else {
+                                break;
+                        }
+                };
+                if (out.kind == LEX_DBLSTR && buf[i] == '"') {
+                        if (peek() == '"') {
+                                nextChar();
+                                continue;
+                        } else {
+                                break;
+                        }
+                };
+        }
+        buf[++i] = '\0';
+        int j = 0;
+        for (j; stringTable[j] && strcmp(stringTable[j], buf); j++)
+                ;
+        if (!stringTable[j]) {
+                stringTable[j] = malloc(strlen(buf));
+                strcpy(stringTable[j], buf);
+                stringTable[j+1] = NULL;
+        };
+        out.id = j;
+        return out;
+}
+
+void getComment()
+{
+        while (peek() == '%') {
+                nextChar();
+                while (nextChar() != '%')
+                        ;
+                if (isspace(peek()))
+                        getchar();
+        }
 }
 
 struct lex_token getToken()
 {
+#ifdef DEBUG
+        printf("Asked to ID '%c'\n", peek());
+#endif
+        if (isspace(peek())) {
+                getchar();
+#ifdef DEBUG
+                printf("Nevermind, actually a '%c'\n", peek());
+#endif
+        };
+        while (peek() == '%') {
+                getComment();
+#ifdef DEBUG
+                printf("Found a comment\n");
+#endif
+        }
         if (isalpha(peek())) {
                 return getID();
         } else if (isdigit(peek())) {
                 return getNum();
-        } else if (ispunct(peek())) {
+        } else if (peek() == '\'' || peek() == '"') {
+                return getStr();
+        } else if (strchr("=@<>*/+-", peek())) {
                 return getOp();
+        } else if (strchr("():,;!", peek())) {
+                return getSep();
         } else {
                 error("Unknown character '%c'", peek());
         }

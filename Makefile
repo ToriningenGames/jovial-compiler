@@ -22,7 +22,7 @@ else
 	DEL=rm -rf
 endif
 
-OBJLIST=main.o error.o lex.o scan.o
+OBJLIST=main.o error.o lex.o re.o
 OUTLIST=JCOMP.exe
 
 # Release/debug split from https://stackoverflow.com/a/34574113/7171141
@@ -32,7 +32,7 @@ ifeq ($(BUILD),release)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))
 else
-	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic
+	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic -DDEBUG
 	PRE=$(SL)Debug$(SL)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))
