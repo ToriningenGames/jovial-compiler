@@ -16,7 +16,9 @@ void newOutput(char *name)
 int main(int argc, char **argv)
 {
         //Windows-specific using standard input as file
-        newInput("CON");
+        char mainbuf[32768];
+        fread(mainbuf, 1, 32768, stdin);
+        newInput(mainbuf);
         newOutput("CON");
         struct lex_token a;
         lexInit();

@@ -8,10 +8,30 @@
 
 int line = 0;
 static int lookahead = ' ';
-FILE *input;
+char *input;
 static char buf[80];
 
+
 char *stringTable[1024];
+
+//List of regexes to match
+re_t reg_whitespace;
+re_t reg_whitespace_end;
+re_t reg_identifier;
+re_t reg_identifier_end;
+re_t reg_number;
+re_t reg_number_end;
+re_t reg_operator;
+re_t reg_operator_end;
+re_t reg_separator;
+re_t reg_separator_end;
+re_t reg_string;
+re_t reg_string_end;
+//There's funny shenanigans between what are comments and what are define-strings
+//Since the whole define portion of the language is a preprocesser in all but name,
+//I will be implementing it as such. Thus, it's not a problem in this file
+re_t reg_comment;
+re_t reg_comment_end;
 
 
 int nextChar()
@@ -118,6 +138,17 @@ void lexInit()
         stringTable[86] = "ZONE";
         //Predefined values
         stringTable[87] = NULL;
+        //All the regexes
+        reg_whitespace = re_compile("^\\s+");
+        reg_whitespace_end = re_compile("\\S");
+        reg_identifier = re_compile("^[a-zA-Z$][a-zA-Z0-9$']*");
+        reg_identifier_end = re_compile("[^a-zA-Z0-9$']");
+        reg_number = re_compile("^[+-]?\\d+");   //Integers only
+        reg_number_end = re_compile("\\D");\
+        reg_operator = re_compile("^[=@<>*/+\\-]");       //No two-char ops
+        reg_separator = re_compile("^[():,;!]");        //No (* or *)
+        reg_string = re_compile("^'.*'[^']");
+        reg_comment = re_compile("^%.*%[^%]");          //% comments only
         nextChar();
 }
 
@@ -132,7 +163,7 @@ void lexEnd()
 
 void newInput(char *name)
 {
-        input = fopen(name, "rt");
+        input = name;
 }
 
 int peek()
@@ -157,19 +188,7 @@ struct lex_token getID()
 {
         //Grab as many qualifying characters as allowed
         //Section 8.2.1 specifies only 31 characters are significant
-        //Names may contain letters, numbers, the $, or the '
-        //They must start with a letter or a $
-        buf[0] = toupper(expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$"));
-        int i = 1;
-        for (i; i < 32; i++) {
-               if (!detect()) {
-                        break;
-               };
-               buf[i] = expect("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$'0123456789");
-        }
-        //Eat whole identifier
-        while (detect())
-                ;
+
         if (!isalpha(peek()) && peek() != '$') {
                 return (struct lex_token){0,0};
         };

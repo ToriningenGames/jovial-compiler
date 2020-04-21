@@ -29,7 +29,7 @@
 
 
 
-#include "re.h"
+#include "inc/re.h"
 #include <stdio.h>
 
 /* Definitions: */
@@ -68,18 +68,19 @@ static int ismetachar(char c);
 
 
 /* Public functions: */
-int re_match(const char* pattern, const char* text)
+int re_match(const char* pattern, const char* text, int* matchlength)
 {
-  return re_matchp(re_compile(pattern), text);
+  return re_matchp(re_compile(pattern), text, matchlength);
 }
 
-int re_matchp(re_t pattern, const char* text)
+int re_matchp(re_t pattern, const char* text, int* matchlength)
 {
+  *matchlength = 0;
   if (pattern != 0)
   {
     if (pattern[0].type == BEGIN)
     {
-      return ((matchpattern(&pattern[1], text)) ? 0 : -1);
+      return ((matchpattern(&pattern[1], text, matchlength)) ? 0 : -1);
     }
     else
     {
@@ -89,7 +90,7 @@ int re_matchp(re_t pattern, const char* text)
       {
         idx += 1;
         
-        if (matchpattern(pattern, text))
+        if (matchpattern(pattern, text, matchlength))
         {
           if (text[0] == '\0')
             return -1;
@@ -367,36 +368,40 @@ static int matchone(regex_t p, char c)
   }
 }
 
-static int matchstar(regex_t p, regex_t* pattern, const char* text)
+static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
   do
   {
-    if (matchpattern(pattern, text))
+    if (matchpattern(pattern, text, matchlength))
       return 1;
   }
-  while ((text[0] != '\0') && matchone(p, *text++));
-
+  while ((*matchlength)++, (text[0] != '\0') && matchone(p, *text++));
+  (*matchlength)--;
   return 0;
 }
 
-static int matchplus(regex_t p, regex_t* pattern, const char* text)
+static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
   while ((text[0] != '\0') && matchone(p, *text++))
   {
-    if (matchpattern(pattern, text))
+    (*matchlength)++;
+    if (matchpattern(pattern, text, matchlength))
       return 1;
   }
   return 0;
 }
 
-static int matchquestion(regex_t p, regex_t* pattern, const char* text)
+static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
   if (p.type == UNUSED)
     return 1;
-  if (matchpattern(pattern, text))
+  if (matchpattern(pattern, text, matchlength))
       return 1;
   if (*text && matchone(p, *text++))
-    return matchpattern(pattern, text);
+  {
+    (*matchlength)++;
+    return matchpattern(pattern, text, matchlength);
+  }
   return 0;
 }
 
@@ -435,7 +440,7 @@ static int matchpattern(regex_t* pattern, const char* text)
 #else
 
 /* Iterative matching */
-static int matchpattern(regex_t* pattern, const char* text)
+static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
 {
   do
   {
@@ -461,6 +466,7 @@ static int matchpattern(regex_t* pattern, const char* text)
       return (matchpattern(pattern, text) || matchpattern(&pattern[2], text));
     }
 */
+  (*matchlength)++;
   }
   while ((text[0] != '\0') && matchone(*pattern++, *text++));
 
