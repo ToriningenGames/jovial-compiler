@@ -3,6 +3,7 @@
  **********/
 
 //None
+void debugOut(int prio, char *format, ...);
 
 /***********
  * error.c *
@@ -20,6 +21,7 @@ struct lex_token {
         long id;
 };
 extern int line;
+extern char *stringTable[1024];
 
 void lexInit();
 void newInput(char *name);
