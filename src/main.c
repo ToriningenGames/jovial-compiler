@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "inc/defines.h"
 
-char *lexNames[] = {
+const char *lexNames[] = {
         "LEX_NONE", "LEX_NUMLIT", "LEX_STRLIT", "LEX_DBLSTR", "LEX_OP", "LEX_IDEN", "LEX_SEP"
 };
 
@@ -37,31 +37,14 @@ int main(int argc, char **argv)
         mainbuf[fread(mainbuf, 1, 32767, infile)] = '\0';
         fclose(infile);
         newInput(mainbuf);
-        struct lex_token a;
-        lexInit();
-        while ((a = getToken()).kind) {
-                printf("Type: %s\tID: %li",
-                    lexNames[a.kind],
-                    a.id);
-                switch (a.kind) {
-                        case LEX_NUMLIT :
-                        case LEX_DBLSTR :
-                        case LEX_IDEN :
-                                printf("\t");
-                        case LEX_STRLIT :
-                                printf("\tValue: %s\n", stringTable[a.id]);
-                                break;
-                        case LEX_SEP :
-                        case LEX_OP :
-                                printf("\tValue: %c", (char)a.id);
-                                if (a.id > 256) {
-                                        printf("%c", (char)(a.id>>8));
-                                };
-                                puts("");
-                                break;
-                        default :
-                                puts("");
-                }
+        struct lex_token tokList[32768];
+        tokList[0] = (struct lex_token){0xFF, 0xFF};
+        for (int i = 1; tokList[i-1].kind; i++) {
+                tokList[i] = getToken();
         }
+        parseInit(tokList+1);
+        printTree();
+        parseAll();
+        printTree();
         error("Critical failure");
 }

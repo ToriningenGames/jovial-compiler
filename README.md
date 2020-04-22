@@ -36,3 +36,13 @@ JOVIAL a (hopefully) easy-ish task.
 
 This project requires a C11 compiler to compile.
 Its build system is done with make. Developed on a Windows 10 platform, with GCC
+
+## TODO
+
+* The entirety of code generation
+* The entirety of parsing
+* `DEFINE`s & co.
+* Make names case insensitive
+* Correct lexing of a few symbols
+  * `!`
+  * `(*`, `*)`
