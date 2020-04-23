@@ -60,24 +60,24 @@ void parsePower()
                 //Are its arguments valid?
                 switch (curr->siblingLeft->item.kind) {
                         case LEX_STRLIT :
-                                error("Cannot exponentiate a string literal");
+                                parseError(curr->siblingLeft, "Cannot exponentiate a string literal");
                         case LEX_SEP :
                                 if (curr->siblingLeft->item.id != ')')
-                                        error("Cannot exponentiate this");
+                                        parseError(curr->siblingLeft, "Cannot exponentiate this");
                 }
                 switch (curr->siblingRight->item.kind) {
                         case LEX_STRLIT :
-                                error("Cannot use string literal as a power");
+                                parseError(curr->siblingRight, "Cannot use string literal as a power");
                         case LEX_SEP :
                                 if (curr->siblingRight->item.id != '(')
-                                        error("Cannot exponentiate with this");
+                                        parseError(curr->siblingRight, "Cannot exponentiate with this");
                 }
                 //It will have two children: the nodes to the left and right
                 curr->childCount = 2;
                 if (!curr->siblingRight)
-                        error("Unexpected end of file");
+                        parseError(curr, "Unexpected end of file");
                 if (!curr->siblingLeft)
-                        error("Unexpected beginning of file");
+                        parseError(curr, "Unexpected beginning of file");
                 curr->children = malloc(sizeof(*(curr->children)) * 2);
                 curr->children[0] = curr->siblingLeft;
                 curr->children[1] = curr->siblingRight;
@@ -122,24 +122,24 @@ void parseMulDiv()
                 //Are its arguments valid?
                 switch (curr->siblingLeft->item.kind) {
                         case LEX_STRLIT :
-                                error("Expected numeric expression");
+                                parseError(curr->siblingLeft, "Expected numeric expression");
                         case LEX_SEP :
                                 if (curr->siblingLeft->item.id != ')')
-                                        error("Expected numeric expression");
+                                        parseError(curr->siblingLeft, "Expected numeric expression");
                 }
                 switch (curr->siblingRight->item.kind) {
                         case LEX_STRLIT :
-                                error("Expected numeric expression");
+                                parseError(curr->siblingRight, "Expected numeric expression");
                         case LEX_SEP :
                                 if (curr->siblingRight->item.id != '(')
-                                        error("Expected numeric expression");
+                                        parseError(curr->siblingRight, "Expected numeric expression");
                 }
                 //It will have two children: the nodes to the left and right
                 curr->childCount = 2;
                 if (!curr->siblingRight)
-                        error("Unexpected end of file");
+                        parseError(curr, "Unexpected end of file");
                 if (!curr->siblingLeft)
-                        error("Unexpected beginning of file");
+                        parseError(curr, "Unexpected beginning of file");
                 curr->children = malloc(sizeof(*(curr->children)) * 2);
                 curr->children[0] = curr->siblingLeft;
                 curr->children[1] = curr->siblingRight;
@@ -171,24 +171,24 @@ void parseAddSub()
                 //Are its arguments valid?
                 switch (curr->siblingLeft->item.kind) {
                         case LEX_STRLIT :
-                                error("Expected numeric expression");
+                                parseError(curr->siblingLeft, "Expected numeric expression");
                         case LEX_SEP :
                                 if (curr->siblingLeft->item.id != ')')
-                                        error("Expected numeric expression");
+                                        parseError(curr->siblingLeft, "Expected numeric expression");
                 }
                 switch (curr->siblingRight->item.kind) {
                         case LEX_STRLIT :
-                                error("Expected numeric expression");
+                                parseError(curr->siblingRight, "Expected numeric expression");
                         case LEX_SEP :
                                 if (curr->siblingRight->item.id != '(')
-                                        error("Expected numeric expression");
+                                        parseError(curr->siblingRight, "Expected numeric expression");
                 }
                 //It will have two children: the nodes to the left and right
                 curr->childCount = 2;
                 if (!curr->siblingRight)
-                        error("Unexpected end of file");
+                        parseError(curr, "Unexpected end of file");
                 if (!curr->siblingLeft)
-                        error("Unexpected beginning of file");
+                        parseError(curr, "Unexpected beginning of file");
                 curr->children = malloc(sizeof(*(curr->children)) * 2);
                 curr->children[0] = curr->siblingLeft;
                 curr->children[1] = curr->siblingRight;

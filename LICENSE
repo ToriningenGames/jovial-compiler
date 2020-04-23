@@ -19,3 +19,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Files reg.c and inc/reg.h are in the Public Domain. For countries that do not have
+a public domain, the copyright holder has released all restrictions and
+requirements on use, distribution, modification, and any other verbs of the
+source code, and have NO WARRANTY, as above.

@@ -6,7 +6,7 @@
 #include "inc/re.h"
 
 
-int line = 0;
+int lexline = 1;
 char *input;
 
 
@@ -142,14 +142,16 @@ struct lex_token getID()
 {
         //Grab as many qualifying characters as allowed
         //Section 8.2.1 specifies only 31 characters are significant
-        int idsiz;
-        if (re_match(reg_identifier, input, &idsiz)) {
-                error("Expected identifier");
+        struct lex_token out;
+        int len;
+        out.line = lexline;
+        if (re_match(reg_identifier, input, &len)) {
+                lexError("Expected identifier");
         };
-        char *newid = malloc(idsiz+1);
-        strncpy(newid, input, idsiz);
-        newid[idsiz] = '\0';
-        input += idsiz;
+        char *newid = malloc(len+1);
+        strncpy(newid, input, len);
+        newid[len] = '\0';
+        input += len;
         //Add token to string table
         int i = 0;
         for (i; stringTable[i] && strcmp(newid, stringTable[i]); i++)
@@ -163,7 +165,6 @@ struct lex_token getID()
                 free(newid);
         }
         //Return token data
-        struct lex_token out;
         out.kind = LEX_IDEN;
         out.id = i;
         return out;
@@ -175,12 +176,12 @@ struct lex_token getNum()
         //Section 8.3.1 is relevant
         //Oddly, the printed form does not permit signs, but the example
                 //immediately following uses one.
-        //I assume this is an errata,
-                //and that signs are allowed in literal contexts
-        int len;
+        //I assume this is covered in parsing
         struct lex_token out;
+        int len;
+        out.line = lexline;
         if (re_match(reg_number, input, &len)) {
-                error("Expected number");
+                lexError("Expected number");
         };
         //We shall not try to parse the number now; its type is unknown
         char *newnum = malloc(len+1);
@@ -210,8 +211,9 @@ struct lex_token getOp()
         //The valid punctual ops are outlined in Section 8.2.3
         struct lex_token out;
         int len;
+        out.line = lexline;
         if (re_match(reg_operator, input, &len)) {
-                error("Expected operator");
+                lexError("Expected operator");
         };
         out.kind = LEX_OP;
         out.id = *input++;
@@ -232,8 +234,9 @@ struct lex_token getSep()
         //We are ignoring (* and *) because they are context dependent :<
         struct lex_token out;
         int len;
+        out.line = lexline;
         if (re_match(reg_separator, input, &len)) {
-                error("Expected separator");
+                lexError("Expected separator");
         };
         out.kind = LEX_SEP;
         out.id = *input++;
@@ -244,8 +247,9 @@ struct lex_token getStr()
 {
         struct lex_token out;
         int len;
+        out.line = lexline;
         if (re_match(reg_string, input, &len)) {
-                error("Expected string literal");
+                lexError("Expected string literal");
         };
         out.kind = LEX_STRLIT;
         char *newstr = malloc(len+1);
@@ -265,15 +269,31 @@ struct lex_token getStr()
         return out;
 }
 
-void getComment()
+//Clear out any whitespace/comments, and advance the lexline counter as necessary
+void getWhitespace()
 {
         int len;
-        while (re_match(reg_comment, input, &len) || re_match(reg_dblstr, input, &len)) {
-                if (re_match(reg_comment, input, &len)) {
-                        input += len;
+        while (isspace(*input) || *input == '"' || *input == '%') {
+                if (!re_match(reg_whitespace, input, &len)) {
+                        for (; len--; input++) {
+                                if (*input == '\n') {
+                                        lexline++;
+                                };
+                        }
                 };
-                if (re_match(reg_dblstr, input, &len)) {
-                        input += len;
+                if (!re_match(reg_comment, input, &len)) {
+                        for (; len--; input++) {
+                                if (*input == '\n') {
+                                        lexline++;
+                                };
+                        }
+                };
+                if (!re_match(reg_dblstr, input, &len)) {
+                        for (; len--; input++) {
+                                if (*input == '\n') {
+                                        lexline++;
+                                };
+                        }
                 };
         }
 }
@@ -281,14 +301,7 @@ void getComment()
 struct lex_token getToken()
 {
         int len;
-        while (!re_match(reg_whitespace, input, &len) || !re_match(reg_comment, input, &len)) {
-                if (!re_match(reg_whitespace, input, &len)) {
-                        input += len;
-                };
-                if (!re_match(reg_comment, input, &len)) {
-                        input += len;
-                };
-        }
+        getWhitespace();
         if (!re_match(reg_identifier, input, &len)) {
                 return getID();
         } else if (!re_match(reg_number, input, &len)) {
@@ -300,8 +313,8 @@ struct lex_token getToken()
         } else if (!re_match(reg_separator, input, &len)) {
                 return getSep();
         } else if (*input == '\0') {
-                return (struct lex_token){LEX_NONE, -1};
+                return (struct lex_token){LEX_NONE, -1, lexline};
         } else {
-                error("Unknown character '%c'", *input);
+                lexError("Unknown character '%c'", *input);
         }
 }

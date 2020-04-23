@@ -5,14 +5,28 @@
 #include "inc/defines.h"
 
 
-static const char *errstr = "Error on line %i: ";
+static const char *lexerrstr = "Lexing error on line %i: ";
+static const char *parseerrstr = "Parse error on line %i: ";
 
-_Noreturn void error(char *message, ...)
+_Noreturn void lexError(char *message, ...)
 {
         va_list args;
-        int msglen = snprintf(NULL, 0, errstr, line) + strlen(message) + 1;
+        int msglen = snprintf(NULL, 0, lexerrstr, lexline) + strlen(message) + 1;
         char out[msglen];
-        snprintf(out, msglen, errstr, line);
+        snprintf(out, msglen, lexerrstr, lexline);
+        strcat(out, message);
+        va_start(args, message);
+        vprintf(out, args);
+        va_end(args);
+        exit(1);
+}
+
+_Noreturn void parseError(struct parse_node *problem, char *message, ...)
+{
+        va_list args;
+        int msglen = snprintf(NULL, 0, parseerrstr, problem->item.line) + strlen(message) + 1;
+        char out[msglen];
+        snprintf(out, msglen, parseerrstr, problem->item.line);
         strcat(out, message);
         va_start(args, message);
         vprintf(out, args);

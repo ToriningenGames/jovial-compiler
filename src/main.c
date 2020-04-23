@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         screamlevel = 999;
         char mainbuf[32768];
         if (argc == 1) {
-                error("No input");
+                puts("Program error: No input");
         };
         FILE *infile = fopen(argv[1], "rt");
         mainbuf[fread(mainbuf, 1, 32767, infile)] = '\0';
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
         lexInit();
         newInput(mainbuf);
         struct lex_token tokList[32768];
-        tokList[0] = (struct lex_token){0xFF, 0xFF};
+        tokList[0] = (struct lex_token){0xFF, 0xFF, -1};
         for (int i = 1; tokList[i-1].kind; i++) {
                 tokList[i] = getToken();
         }
@@ -47,5 +47,5 @@ int main(int argc, char **argv)
         printTree();
         parseAll();
         printTree();
-        error("Critical failure");
+        puts("Program error: Critical failure; unfinished");
 }

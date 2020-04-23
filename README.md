@@ -40,9 +40,24 @@ Its build system is done with make. Developed on a Windows 10 platform, with GCC
 ## TODO
 
 * The entirety of code generation
-* The entirety of parsing
+* The majority of parsing
 * `DEFINE`s & co.
 * Make names case insensitive
 * Correct lexing of a few symbols
   * `!`
   * `(*`, `*)`
+* Input/Output
+* Arithmetic verification during parsing
+
+## Help!
+
+I can't verify correctness without correct source code! Please, if anybody has
+MIT-licensed, or Public Domain JOVIAL source that they know compiles, or
+shouldn't but does with this tool anyways, open an issue and I'll include and
+write against the software.
+
+This includes government products (at least in the US), so if anyone is
+familiar with the FOIA request process, I would be grateful for assistance.
+
+Or, if you find an issue but do not/can not share your JOVIAL source, a clear
+issue would be appreciated.
