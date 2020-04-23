@@ -15,7 +15,7 @@ char *stringTable[1024];
 //List of regexes to match against
 #define reg_whitespace "^\\s+"
 #define reg_identifier "^[a-zA-Z$][a-zA-Z0-9$']*"
-#define reg_number     "^[+-]?\\d+\\.?\\d*"       //Subset of actual permits
+#define reg_number     "^[+-]?\\d+\\.*\\d*"       //Subset of actual permits
 #define reg_operator   "^[=@<>*/+\\-]"            //No two-char ops
 #define reg_separator  "^[():,;!]"                //No (* or *)
 #define reg_string     "^'[^']*'"               //Escaping ' is done later

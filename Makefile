@@ -32,7 +32,7 @@ ifeq ($(BUILD),release)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))
 else
-	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic -DDEBUG
+	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic -Wno-switch -DDEBUG
 	PRE=$(SL)Debug$(SL)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))

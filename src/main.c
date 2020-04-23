@@ -36,6 +36,7 @@ int main(int argc, char **argv)
         FILE *infile = fopen(argv[1], "rt");
         mainbuf[fread(mainbuf, 1, 32767, infile)] = '\0';
         fclose(infile);
+        lexInit();
         newInput(mainbuf);
         struct lex_token tokList[32768];
         tokList[0] = (struct lex_token){0xFF, 0xFF};

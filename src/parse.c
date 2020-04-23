@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "inc/defines.h"
 
 
@@ -47,29 +48,45 @@ void parseEnd()
         deleteNode(head);
 }
 
-void parseAddSub()
-{
-        ;
-}
-
-void parseMulDiv()
+void parsePower()
 {
         for (struct parse_node *curr = head; curr; curr = curr->siblingRight) {
                 //Is this node relevant?
                 if (curr->item.kind != LEX_OP)
                         continue;
-                if ((char)curr->item.id != '*' && (char)curr->item.id != '/')
+                if (curr->item.id != (('*'<<8) | '*'))
                         continue;
                 //This is a relevant node
+                //Are its arguments valid?
+                switch (curr->siblingLeft->item.kind) {
+                        case LEX_STRLIT :
+                                error("Cannot exponentiate a string literal");
+                        case LEX_SEP :
+                                if (curr->siblingLeft->item.id != ')')
+                                        error("Cannot exponentiate this");
+                }
+                switch (curr->siblingRight->item.kind) {
+                        case LEX_STRLIT :
+                                error("Cannot use string literal as a power");
+                        case LEX_SEP :
+                                if (curr->siblingRight->item.id != '(')
+                                        error("Cannot exponentiate with this");
+                }
                 //It will have two children: the nodes to the left and right
                 curr->childCount = 2;
+                if (!curr->siblingRight)
+                        error("Unexpected end of file");
+                if (!curr->siblingLeft)
+                        error("Unexpected beginning of file");
                 curr->children = malloc(sizeof(*(curr->children)) * 2);
                 curr->children[0] = curr->siblingLeft;
                 curr->children[1] = curr->siblingRight;
                 //Remove them from this level
                 //Remove ties to them
-                curr->children[0]->siblingLeft->siblingRight = curr;
-                curr->children[1]->siblingRight->siblingLeft = curr;
+                if (curr->children[0]->siblingLeft)
+                        curr->children[0]->siblingLeft->siblingRight = curr;
+                if (curr->children[1]->siblingRight)
+                        curr->children[1]->siblingRight->siblingLeft = curr;
                 curr->siblingLeft = curr->children[0]->siblingLeft;
                 curr->siblingRight = curr->children[1]->siblingRight;
                 //Remove thier ties
@@ -80,10 +97,127 @@ void parseMulDiv()
         }
 }
 
-void parseAll()
+void parseMulDiv()
 {
+        for (struct parse_node *curr = head; curr; curr = curr->siblingRight) {
+                //Is this node relevant?
+                //Looking for '*', '/', 'MOD'
+                if (curr->item.kind != LEX_OP) {
+                        if (curr->item.kind != LEX_IDEN) {
+                                continue;
+                        };
+                        if (strcmp("MOD", stringTable[curr->item.id])) {
+                                continue;
+                        };
+                } else {
+                        if (curr->item.id == (long)'*') {
+                                ;       //Don't continue
+                        } else if (curr->item.id == (long)'/') {
+                                ;       //Don't continue
+                        } else {
+                                continue;
+                        }
+                }
+                //This is a relevant node
+                //Are its arguments valid?
+                switch (curr->siblingLeft->item.kind) {
+                        case LEX_STRLIT :
+                                error("Expected numeric expression");
+                        case LEX_SEP :
+                                if (curr->siblingLeft->item.id != ')')
+                                        error("Expected numeric expression");
+                }
+                switch (curr->siblingRight->item.kind) {
+                        case LEX_STRLIT :
+                                error("Expected numeric expression");
+                        case LEX_SEP :
+                                if (curr->siblingRight->item.id != '(')
+                                        error("Expected numeric expression");
+                }
+                //It will have two children: the nodes to the left and right
+                curr->childCount = 2;
+                if (!curr->siblingRight)
+                        error("Unexpected end of file");
+                if (!curr->siblingLeft)
+                        error("Unexpected beginning of file");
+                curr->children = malloc(sizeof(*(curr->children)) * 2);
+                curr->children[0] = curr->siblingLeft;
+                curr->children[1] = curr->siblingRight;
+                //Remove them from this level
+                //Remove ties to them
+                if (curr->children[0]->siblingLeft)
+                        curr->children[0]->siblingLeft->siblingRight = curr;
+                if (curr->children[1]->siblingRight)
+                        curr->children[1]->siblingRight->siblingLeft = curr;
+                curr->siblingLeft = curr->children[0]->siblingLeft;
+                curr->siblingRight = curr->children[1]->siblingRight;
+                //Remove thier ties
+                curr->children[0]->siblingLeft = NULL;
+                curr->children[0]->siblingRight = curr->children[1];
+                curr->children[1]->siblingLeft = curr->children[0];
+                curr->children[1]->siblingRight = NULL;
+        }
+}
+
+void parseAddSub()
+{
+        for (struct parse_node *curr = head; curr; curr = curr->siblingRight) {
+                //Is this node relevant?
+                if (curr->item.kind != LEX_OP)
+                        continue;
+                if (curr->item.id != '+' && curr->item.id != '-')
+                        continue;
+                //This is a relevant node
+                //Are its arguments valid?
+                switch (curr->siblingLeft->item.kind) {
+                        case LEX_STRLIT :
+                                error("Expected numeric expression");
+                        case LEX_SEP :
+                                if (curr->siblingLeft->item.id != ')')
+                                        error("Expected numeric expression");
+                }
+                switch (curr->siblingRight->item.kind) {
+                        case LEX_STRLIT :
+                                error("Expected numeric expression");
+                        case LEX_SEP :
+                                if (curr->siblingRight->item.id != '(')
+                                        error("Expected numeric expression");
+                }
+                //It will have two children: the nodes to the left and right
+                curr->childCount = 2;
+                if (!curr->siblingRight)
+                        error("Unexpected end of file");
+                if (!curr->siblingLeft)
+                        error("Unexpected beginning of file");
+                curr->children = malloc(sizeof(*(curr->children)) * 2);
+                curr->children[0] = curr->siblingLeft;
+                curr->children[1] = curr->siblingRight;
+                //Remove them from this level
+                //Remove ties to them
+                if (curr->children[0]->siblingLeft)
+                        curr->children[0]->siblingLeft->siblingRight = curr;
+                if (curr->children[1]->siblingRight)
+                        curr->children[1]->siblingRight->siblingLeft = curr;
+                curr->siblingLeft = curr->children[0]->siblingLeft;
+                curr->siblingRight = curr->children[1]->siblingRight;
+                //Remove thier ties
+                curr->children[0]->siblingLeft = NULL;
+                curr->children[0]->siblingRight = curr->children[1];
+                curr->children[1]->siblingLeft = curr->children[0];
+                curr->children[1]->siblingRight = NULL;
+        }
+}
+
+void parseArith()
+{
+        parsePower();
         parseMulDiv();
         parseAddSub();
+}
+
+void parseAll()
+{
+        parseArith();
 }
 
 //Recursive depth-first
