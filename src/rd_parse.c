@@ -13,6 +13,7 @@ int tacOut(const char *message,  ...)
 }
 
 
+static struct lex_token next = {0, 0, 1};
 static struct lex_token lookahead = {0, 0, 1};
 
 //Special next values
@@ -23,68 +24,102 @@ bool anticipate(enum lex_type type, long id)
 {
         if (lookahead.kind == LEX_NONE) {
                 lookahead = getToken();
+        }
+        if (next.kind == LEX_NONE) {
+                next = lookahead;
+                lookahead = getToken();
         };
-        if (type != LEX_NONE && lookahead.kind != type)
+        if (type != LEX_NONE && next.kind != type)
                 return false;
-        if (id == -2 && lookahead.id < RESERVEDEND)
+        if (id == -2 && next.id < RESERVEDEND)
                 return false;
-        if (id > -1 && lookahead.id != id)
+        if (id > -1 && next.id != id)
                 return false;
         return true;
 }
 
+//Pulls the next lexing token if it matches input, fails otherwise
 struct lex_token expect(enum lex_type type, long id, char *friendlyname)
 {
         if (!anticipate(type, id)) {
-                switch (lookahead.kind) {
+                switch (next.kind) {
                         case LEX_NUMLIT :
-                                parseError(lookahead,
+                                parseError(next,
                                     "Expected %s, got a number",
                                     friendlyname);
                         case LEX_STRLIT :
-                                parseError(lookahead,
+                                parseError(next,
                                     "Expected %s, got a string",
                                     friendlyname);
                         case LEX_OP :
                         case LEX_SEP :
-                                parseError(lookahead,
+                                parseError(next,
                                     "Expected %s, got '%c%c'",
                                     friendlyname,
-                                    lookahead.id & 0xFF,
-                                    lookahead.id & 0xFF00 ? lookahead.id >> 8 : ' ');
+                                    next.id & 0xFF,
+                                    next.id & 0xFF00 ? next.id >> 8 : ' ');
                         case LEX_IDEN :
-                                parseError(lookahead,
+                                parseError(next,
                                     "Expected %s, got '%s'",
                                     friendlyname,
-                                    stringTable[lookahead.id]);
+                                    stringTable[next.id]);
                         case LEX_END :
-                                parseError(lookahead,
+                                parseError(next,
                                     "Expected %s, got end of file",
                                     friendlyname);
                 }
         };
-        struct lex_token temp = lookahead;
+        struct lex_token temp = next;
+        next = lookahead;
         lookahead = getToken();
         return temp;
+}
+
+//Sees input, and pulls it if it matches, leaves it otherwise
+bool check(enum lex_type type, long id)
+{
+        if (anticipate(type, id)) {
+                expect(type, id, "");
+                return true;
+        } else {
+                return false;
+        }
+}
+
+void getLabel()
+{
+        struct lex_token label;
+        label = expect(LEX_IDEN, -2, "Label");
+        expect(LEX_SEP, ':', "Label's colon");
+        tacOut("Label: %s\n", stringTable[label.id]);
 }
 
 void getStatement()
 {
         //Zero or more labels
-        //Either a simple statement or BEGIN
-        if (anticipate(LEX_IDEN, BEGIN)) {
+        while (lookahead.kind == LEX_SEP && lookahead.id == ':') {
+                getLabel();
+        }
+        //Either a simple statement or compound
+        if (check(LEX_IDEN, BEGIN)) {
                 //Compound statement
-                expect(LEX_IDEN, BEGIN, "BEGIN");
-                //TODO
-                expect(LEX_IDEN, END, "END");
+                //Zero or more statements, followed by zero or more labels
+                while (!check(LEX_IDEN, END)) {
+                        if (lookahead.kind != LEX_SEP || lookahead.id != ':') {
+                                getStatement();
+                        };
+                        //Because getStatement would die on a label preceding
+                            //END, which should be valid
+                        while (lookahead.kind == LEX_SEP && lookahead.id == ':') {
+                                getLabel();
+                        }
+                }
         } else {
-                //Simple statement (tighen requirements)      TODO
+                //Simple statement, or parse error
                 //Check for null statement
-                if (anticipate(LEX_SEP, ';')) {
-                        expect(LEX_SEP, ';', "semicolon");
+                if (check(LEX_SEP, ';')) {
                         return;
                 }
-                struct lex_token startStmt = expect(LEX_NONE, -1, "anything");
                 //TODO
                 expect(LEX_SEP, ';', "semicolon");
         }
@@ -99,7 +134,7 @@ void getModule()
 {
         expect(LEX_IDEN, START, "START");
         //Is this compool?
-        if (anticipate(LEX_IDEN, COMPOOL)) {
+        if (check(LEX_IDEN, COMPOOL)) {
                 struct lex_token compname = {LEX_IDEN, -2, 0};
                 compname = expect(LEX_IDEN, -2, "compool name");
                 tacOut("Compool name: %s\n", stringTable[compname.id]);
@@ -112,13 +147,12 @@ void getModule()
                 while ( (0 /*anticipate(/* declarations */)) {
                         ;       //TODO
                 }
-                //Is this a program?
-                if (anticipate(LEX_IDEN, PROGRAM)) {
-                        expect(LEX_IDEN, PROGRAM, "PROGRAM");
+                //Is there a program?
+                if (check(LEX_IDEN, PROGRAM)) {
                         struct lex_token progname = {LEX_IDEN, -2, 0};
                         progname = expect(LEX_IDEN, -2, "program name");
-                        tacOut("Program name: %s\n", stringTable[progname.id]);
                         expect(LEX_SEP, ';', "semicolon");
+                        tacOut("Program name: %s\n", stringTable[progname.id]);
                         getStatement();
                 };
                 //Are there subroutines?
@@ -131,5 +165,6 @@ void getModule()
 
 void getProgram()
 {
-        getModule();
+        while (anticipate(LEX_IDEN, START))
+                getModule();
 }
