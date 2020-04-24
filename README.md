@@ -42,10 +42,13 @@ Its build system is done with make. Developed on a Windows 10 platform, with GCC
 * The entirety of code generation
   * Outputting a stack-based IR from parsing
   * Outputting a register/memory based TAC from that
-  * Outputting an actual machine code from that
+  * Outputting an actual machine code representation from that
 * The majority of parsing
-* Compools
-* `DEFINE`s & co.
+  * Compools
+  * `DEFINE`s & co.
+  * Declarations
+  * Subroutines
+  * Non-empty statements
 * Make names case insensitive
 * Correct lexing of a few symbols
   * `!`

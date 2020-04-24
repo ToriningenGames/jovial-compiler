@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 #include "inc/defines.h"
 
 //Placeholder
@@ -91,7 +92,7 @@ void getLabel()
         struct lex_token label;
         label = expect(LEX_IDEN, -2, "Label");
         expect(LEX_SEP, ':', "Label's colon");
-        tacOut("Label: %s\n", stringTable[label.id]);
+        tacOut("%s:\n", stringTable[label.id]);
 }
 
 void getStatement()
@@ -120,8 +121,54 @@ void getStatement()
                 if (check(LEX_SEP, ';')) {
                         return;
                 }
-                //TODO
-                expect(LEX_SEP, ';', "semicolon");
+                if (check(LEX_IDEN, ABORT)) {
+                        //Abort statement
+                } else if (check(LEX_IDEN, STOP)) {
+                        //Stop statement
+                } else if (check(LEX_IDEN, EXIT)) {
+                        //Exit statement
+                } else if (check(LEX_IDEN, GOTO)) {
+                        //Goto statement
+                        struct lex_token label = expect(LEX_IDEN, -2, "Label name");
+                        expect(LEX_SEP, ';', "semicolon");
+                        tacOut("  JMP %s\n", stringTable[label.id]);
+                } else if (check(LEX_IDEN, RETURN)) {
+                        //Return statement
+                        expect(LEX_SEP, ';', "semicolon");
+                        tacOut("  RET\n");
+                } else if (check(LEX_IDEN, IF)) {
+                        //If statement
+                } else if (check(LEX_IDEN, CASE)) {
+                        //Case statement?!
+                } else if (check(LEX_IDEN, FOR)) {
+                        //For statement
+                } else if (check(LEX_IDEN, WHILE)) {
+                        //While statement
+                } else {
+                        //Either assignment, or procedure call
+                        if (!anticipate(LEX_IDEN, -2)) {
+                                //Will always fail
+                                expect(LEX_IDEN, -2, "statement");
+                                assert((bool)"Conflicting info on existence of assignment/procedure");
+                        };
+                        if (lookahead.kind != LEX_SEP) {
+                                expect(LEX_IDEN, -2, "statement");
+                                //Will always fail
+                                expect(LEX_SEP, '=', "assignment or procedure call");
+                                assert((bool)"Conflicting info on existence of assignment/procedure");
+                        };
+                        if (lookahead.id == '(') {
+                                //Procedure call
+                        } else if (lookahead.id == ',' || lookahead.id == '=') {
+                                //Assignment
+                        } else {
+                                expect(LEX_IDEN, -2, "statement");
+                                //Will always fail
+                                expect(LEX_SEP, '=', "assignment or procedure call");
+                                assert((bool)"Conflicting info on existence of assignment/procedure");
+                        }
+                        expect(LEX_SEP, ';', "semicolon");
+                }
         }
 }
 
@@ -137,7 +184,7 @@ void getModule()
         if (check(LEX_IDEN, COMPOOL)) {
                 struct lex_token compname = {LEX_IDEN, -2, 0};
                 compname = expect(LEX_IDEN, -2, "compool name");
-                tacOut("Compool name: %s\n", stringTable[compname.id]);
+                tacOut(".DEFINE _COMPOOL_%s\n", stringTable[compname.id]);
                 expect(LEX_SEP, ';', "semicolon");
                 while ( (0 /*anticipate(/* non-nested subroutine */)) {
                         getCompool();   //TODO
@@ -152,7 +199,7 @@ void getModule()
                         struct lex_token progname = {LEX_IDEN, -2, 0};
                         progname = expect(LEX_IDEN, -2, "program name");
                         expect(LEX_SEP, ';', "semicolon");
-                        tacOut("Program name: %s\n", stringTable[progname.id]);
+                        tacOut(".DEFINE _PROGRAM %s\n", stringTable[progname.id]);
                         getStatement();
                 };
                 //Are there subroutines?

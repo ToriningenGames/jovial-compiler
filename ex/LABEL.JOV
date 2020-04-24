@@ -3,7 +3,7 @@ ONE:
 TWO: THREE:FOUR:
 BEGIN
     FIVE:
-    SIX: STOP;
+    SIX: GOTO FAILURE;
     BEGIN
         NINE:
     END

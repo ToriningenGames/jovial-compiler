@@ -49,6 +49,18 @@ Document:           LABEL.JOV
 Description:        A file containing a program of one statement, blocks, and
                         labels.
 Expected outcome:   Parse error on line 12 due to label not on statement
-Current outcome:    "Parse error on line 6: Expected semicolon, got 'STOP'"
+Current outcome:    "Parse error on line 12: Expected TERM, got 'FAILURE'"
+Pass/Fail:          Pass
+
+Document:           RETURN.JOV
+Description:        A file containing a return outside of a function
+Expected outcome:   Logical error on line 6 due to return outside of a function
+Current outcome:    No error
 Pass/Fail:          Fail
+
+Document:           ETERNAL.JOV
+Description:        A file containing gotos arranged in an infinite loop
+Expected outcome:   No error. Resultant program should not terminate
+Current outcome:    No error
+Pass/Fail:          Pass
 
