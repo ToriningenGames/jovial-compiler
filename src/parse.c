@@ -208,11 +208,60 @@ void parseAddSub()
         }
 }
 
+void parseAssign()
+{
+        //Assignment statements are bigger than other arithmetic operations
+        //Tailed by a semicolon, and assigning to a comma-separated list of ids
+        for (struct parse_node *curr = head; curr; curr = curr->siblingRight) {
+                //Search for a '=' op
+                if (curr->item.kind != LEX_OP)
+                        continue;
+                if (curr->item.id != '=')
+                        continue;
+                //First child is the right node; the value to assign
+                //All remaining children are the assignees
+                curr->childCount = 1;
+                for (struct parse_node *i = curr->siblingLeft; i; i = i->siblingLeft) {
+                        if (i->item.kind != LEX_IDEN) {
+                                break;
+                        }
+                        
+                }
+                //Left argument must be an identifier
+                if (curr->childCount < 2) {
+                        parseError(curr->siblingLeft, "Cannot assign to this");
+                };
+                //Left and right nodes are children
+                curr->childCount = 2;
+                if (!curr->siblingRight)
+                        parseError(curr, "Unexpected end of file");
+                if (!curr->siblingLeft)
+                        parseError(curr, "Unexpected beginning of file");
+                curr->children = malloc(sizeof(*(curr->children)) * 2);
+                curr->children[0] = curr->siblingLeft;
+                curr->children[1] = curr->siblingRight;
+                //Remove them from this level
+                //Remove ties to them
+                if (curr->children[0]->siblingLeft)
+                        curr->children[0]->siblingLeft->siblingRight = curr;
+                if (curr->children[1]->siblingRight)
+                        curr->children[1]->siblingRight->siblingLeft = curr;
+                curr->siblingLeft = curr->children[0]->siblingLeft;
+                curr->siblingRight = curr->children[1]->siblingRight;
+                //Remove thier ties
+                curr->children[0]->siblingLeft = NULL;
+                curr->children[0]->siblingRight = curr->children[1];
+                curr->children[1]->siblingLeft = curr->children[0];
+                curr->children[1]->siblingRight = NULL;
+        }
+}
+
 void parseArith()
 {
         parsePower();
         parseMulDiv();
         parseAddSub();
+        parseAssign();
 }
 
 void parseAll()
