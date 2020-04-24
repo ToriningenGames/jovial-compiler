@@ -21,12 +21,12 @@ _Noreturn void lexError(char *message, ...)
         exit(1);
 }
 
-_Noreturn void parseError(struct parse_node *problem, char *message, ...)
+_Noreturn void parseError(struct lex_token problem, char *message, ...)
 {
         va_list args;
-        int msglen = snprintf(NULL, 0, parseerrstr, problem->item.line) + strlen(message) + 1;
+        int msglen = snprintf(NULL, 0, parseerrstr, problem.line) + strlen(message) + 1;
         char out[msglen];
-        snprintf(out, msglen, parseerrstr, problem->item.line);
+        snprintf(out, msglen, parseerrstr, problem.line);
         strcat(out, message);
         va_start(args, message);
         vprintf(out, args);

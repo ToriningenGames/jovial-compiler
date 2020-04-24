@@ -25,7 +25,6 @@ void debugOut(int prio, char *format, ...)
         }
 }
 
-
 int main(int argc, char **argv)
 {
         screamlevel = 999;
@@ -38,14 +37,6 @@ int main(int argc, char **argv)
         fclose(infile);
         lexInit();
         newInput(mainbuf);
-        struct lex_token tokList[32768];
-        tokList[0] = (struct lex_token){0xFF, 0xFF, -1};
-        for (int i = 1; tokList[i-1].kind; i++) {
-                tokList[i] = getToken();
-        }
-        parseInit(tokList+1);
-        printTree();
-        parseAll();
-        printTree();
+        getProgram();
         puts("Program error: Critical failure; unfinished");
 }

@@ -22,7 +22,7 @@ else
 	DEL=rm -rf
 endif
 
-OBJLIST=main.o error.o lex.o re.o parse.o
+OBJLIST=main.o error.o lex.o re.o rd_parse.o
 OUTLIST=JCOMP.exe
 
 # Release/debug split from https://stackoverflow.com/a/34574113/7171141
