@@ -70,12 +70,29 @@ struct lex_token expect(enum lex_type type, long id, char *friendlyname)
 
 void getStatement()
 {
-        ;
+        //Zero or more labels
+        //Either a simple statement or BEGIN
+        if (anticipate(LEX_IDEN, BEGIN)) {
+                //Compound statement
+                expect(LEX_IDEN, BEGIN, "BEGIN");
+                //TODO
+                expect(LEX_IDEN, END, "END");
+        } else {
+                //Simple statement (tighen requirements)      TODO
+                //Check for null statement
+                if (anticipate(LEX_SEP, ';')) {
+                        expect(LEX_SEP, ';', "semicolon");
+                        return;
+                }
+                struct lex_token startStmt = expect(LEX_NONE, -1, "anything");
+                //TODO
+                expect(LEX_SEP, ';', "semicolon");
+        }
 }
 
 void getCompool()
 {
-        ;
+        ;       //TODO
 }
 
 void getModule()
@@ -88,12 +105,12 @@ void getModule()
                 tacOut("Compool name: %s\n", stringTable[compname.id]);
                 expect(LEX_SEP, ';', "semicolon");
                 while ( (0 /*anticipate(/* non-nested subroutine */)) {
-                        getCompool();
+                        getCompool();   //TODO
                 }
         } else {
                 //Are there declaration(s)?
                 while ( (0 /*anticipate(/* declarations */)) {
-                        ;
+                        ;       //TODO
                 }
                 //Is this a program?
                 if (anticipate(LEX_IDEN, PROGRAM)) {
@@ -106,7 +123,7 @@ void getModule()
                 };
                 //Are there subroutines?
                 while ( (0 /*anticipate(/* non-nested subroutine */)) {
-                        ;
+                        ;       //TODO
                 }
         }
         expect(LEX_IDEN, TERM, "TERM");

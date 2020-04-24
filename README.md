@@ -40,14 +40,18 @@ Its build system is done with make. Developed on a Windows 10 platform, with GCC
 ## TODO
 
 * The entirety of code generation
+  * Outputting a stack-based IR from parsing
+  * Outputting a register/memory based TAC from that
+  * Outputting an actual machine code from that
 * The majority of parsing
+* Compools
 * `DEFINE`s & co.
 * Make names case insensitive
 * Correct lexing of a few symbols
   * `!`
   * `(*`, `*)`
 * Input/Output
-* Arithmetic verification during parsing
+* All optimization ever
 
 ## Help!
 
@@ -60,4 +64,5 @@ This includes government products (at least in the US), so if anyone is
 familiar with the FOIA request process, I would be grateful for assistance.
 
 Or, if you find an issue but do not/can not share your JOVIAL source, a clear
-issue would be appreciated.
+issue would be appreciated. There is a README in the `ex` folder, that would
+serve reasonably well as an issue template for now.
