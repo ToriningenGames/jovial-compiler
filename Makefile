@@ -22,28 +22,33 @@ else
 	DEL=rm -rf
 endif
 
-OBJLIST=main.o error.o lex.o re.o rd_parse.o
+OBJLIST=main.o error.o lex.o re.o rd_parse.o TAC.o assembly.o
 OUTLIST=JCOMP.exe
 
 # Release/debug split from https://stackoverflow.com/a/34574113/7171141
-ifeq ($(BUILD),release)
-	FLAGS=--std=c11 -O3
-	PRE=$(SL)Release$(SL)
+ifeq ($(BUILD),debug)
+	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic -Wno-switch -DDEBUG -D$(TARGET)
+	PRE=$(SL)$(TARGET)$(SL)Debug$(SL)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))
 else
-	FLAGS=--std=c11 -Og -Wall -Wextra -Wpedantic -Wno-switch -DDEBUG
-	PRE=$(SL)Debug$(SL)
+	FLAGS=--std=c11 -O3 -D$(TARGET)
+	PRE=$(SL)$(TARGET)$(SL)Release$(SL)
 	OUT=$(addprefix bin$(PRE),$(OUTLIST))
 	OBJ=$(addprefix obj$(PRE),$(OBJLIST))
 endif
 
 all:
-	$(MAKE) release
-	$(MAKE) debug
+	$(MAKE) M68000
+	$(MAKE) M68000-debug
+
+M68000:
+	$(MAKE) release TARGET=M68000
+M68000-debug:
+	$(MAKE) debug   TARGET=M68000
 
 release debug:
-	$(MAKE) _output BUILD=$@
+	$(MAKE) _output BUILD=$@ TARGET=$(TARGET)
 
 $(OBJ) : obj$(PRE)%.o : src$(SL)%.c
 	$(CC) $(FLAGS) -c $< -o $@
